@@ -31,10 +31,9 @@ sudo chown ec2-user:ec2-user /srv/running-coach
 
 # 코드 복사 (git 사용 시)
 git clone <repo-url> /srv/running-coach
-# 또는 scp로 직접 복사
-scp -r ./backend ec2-user@<EC2_IP>:/srv/running-coach/
 
-cd /srv/running-coach/backend
+# 작업 디렉터리로 이동
+cd /srv/running-coach
 
 # 가상환경 생성 및 의존성 설치
 python3.11 -m venv .venv
@@ -55,16 +54,6 @@ EOF
 
 chmod 600 /srv/running-coach/backend/.env
 python-dotenv로 .env를 로드하려면 run.py에 한 줄 추가합니다.
-
-
-from dotenv import load_dotenv
-load_dotenv()
-
-from app import create_app
-app = create_app()
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
 ```
 
 5. DynamoDB 테이블 생성
@@ -96,9 +85,8 @@ After=network.target
 
 [Service]
 User=ec2-user
-WorkingDirectory=/srv/running-coach/backend
-EnvironmentFile=/srv/running-coach/backend/.env
-ExecStart=/srv/running-coach/backend/.venv/bin/gunicorn \
+WorkingDirectory=/srv/running-coach
+ExecStart=/srv/running-coach/.venv/bin/gunicorn \
     --workers 2 \
     --bind 127.0.0.1:5000 \
     --access-logfile /var/log/running-coach/access.log \
@@ -140,6 +128,51 @@ EOF
 sudo nginx -t
 sudo systemctl enable --now nginx
 ```
+
+nginx 설정 충돌 확인
+
+```
+AL2023 기본 nginx 설정이 모든 요청을 가로채는 경우가 많습니다.
+
+
+# 기본 서버 블록이 /v1/ 보다 우선순위를 가지는지 확인
+cat /etc/nginx/nginx.conf | grep -A5 "server {"
+기본 server 블록을 비활성화하고 설정을 교체합니다.
+
+
+# 기존 conf.d 파일 확인
+ls /etc/nginx/conf.d/
+
+# running-coach.conf를 아래 내용으로 교체
+sudo tee /etc/nginx/conf.d/running-coach.conf << 'EOF'
+server {
+    listen 80 default_server;
+    server_name _;
+
+    location /v1/ {
+        proxy_pass         http://127.0.0.1:5000;
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+    }
+
+    location / {
+        return 404;
+    }
+}
+EOF
+nginx.conf 안에 기본 server 블록이 있다면 비활성화합니다.
+
+
+# nginx.conf에서 기본 server 블록을 include 방식으로 관리하는지 확인
+grep -n "include" /etc/nginx/nginx.conf
+
+# nginx.conf의 http 블록 안에 server {} 가 직접 있다면 주석 처리
+sudo vi /etc/nginx/nginx.conf
+# 기존 server { ... } 블록 전체를 # 으로 주석 처리
+```
+
+
 
 8. 동작 확인
 
