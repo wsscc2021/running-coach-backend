@@ -1,25 +1,25 @@
 from flask import Blueprint, request, jsonify
 from botocore.exceptions import ClientError
-from ..models.bio_event import BioEventRequest
-from ..services.bio_service import save_bio_events
+from ..models.session import Session
+from ..services.session_service import save_session
 
-bio_bp = Blueprint("bio", __name__)
+session_bp = Blueprint("session", __name__)
 
 
-@bio_bp.post("/bio/events")
-def post_bio_events():
+@session_bp.post("/sessions")
+def post_session():
     body = request.get_json(silent=True)
     if not body:
         return jsonify({"error": "Request body must be JSON"}), 400
 
-    required = {"userId", "deviceId", "sessionId", "events"}
+    required = {"sessionId", "userId", "deviceId", "startTime", "endTime"}
     missing = required - body.keys()
     if missing:
         return jsonify({"error": f"Missing fields: {', '.join(missing)}"}), 400
 
-    bio_request = BioEventRequest.from_dict(body)
+    session = Session.from_dict(body)
     try:
-        saved = save_bio_events(bio_request)
+        save_session(session)
     except ClientError as e:
         code = e.response["Error"]["Code"]
         msg = e.response["Error"]["Message"]
@@ -27,4 +27,4 @@ def post_bio_events():
     except Exception as e:
         return jsonify({"error": f"Unexpected error: {type(e).__name__}: {e}"}), 500
 
-    return jsonify({"saved": saved}), 201
+    return jsonify({"sessionId": session.sessionId}), 201

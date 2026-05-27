@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from typing import Optional
 
 
 @dataclass
@@ -9,6 +8,7 @@ class BioEvent:
     measuredAt: str
     value: float
     unit: str
+
     @classmethod
     def from_dict(cls, data: dict) -> "BioEvent":
         return cls(
@@ -19,74 +19,64 @@ class BioEvent:
             unit=data["unit"],
         )
 
-    def to_dynamodb_item(self, user_id: str, device_id: str, session_id: Optional[str]) -> dict:
-        item = {
-            "userId": user_id,
+    def to_dynamodb_item(self, user_id: str, device_id: str, session_id: str) -> dict:
+        return {
+            "sessionId": session_id,
             "eventId": self.eventId,
+            "userId": user_id,
             "deviceId": device_id,
             "sensorType": self.sensorType,
             "measuredAt": self.measuredAt,
             "value": str(self.value),
             "unit": self.unit,
         }
-        if session_id:
-            item["sessionId"] = session_id
-        return item
 
-    def to_heart_rate_item(self, user_id: str, device_id: str, session_id: Optional[str]) -> dict:
-        item = {
-            "userId": user_id,
+    def to_heart_rate_item(self, user_id: str, device_id: str, session_id: str) -> dict:
+        return {
+            "sessionId": session_id,
             "eventId": self.eventId,
+            "userId": user_id,
             "deviceId": device_id,
             "measuredAt": self.measuredAt,
             "bpm": int(self.value),
         }
-        if session_id:
-            item["sessionId"] = session_id
-        return item
 
-    def to_cadence_item(self, user_id: str, device_id: str, session_id: Optional[str]) -> dict:
-        item = {
-            "userId": user_id,
+    def to_cadence_item(self, user_id: str, device_id: str, session_id: str) -> dict:
+        return {
+            "sessionId": session_id,
             "eventId": self.eventId,
+            "userId": user_id,
             "deviceId": device_id,
             "measuredAt": self.measuredAt,
             "stepsPerMinute": str(self.value),
         }
-        if session_id:
-            item["sessionId"] = session_id
-        return item
 
-    def to_speed_item(self, user_id: str, device_id: str, session_id: Optional[str]) -> dict:
-        item = {
-            "userId": user_id,
+    def to_speed_item(self, user_id: str, device_id: str, session_id: str) -> dict:
+        return {
+            "sessionId": session_id,
             "eventId": self.eventId,
+            "userId": user_id,
             "deviceId": device_id,
             "measuredAt": self.measuredAt,
             "metersPerSecond": str(self.value),
         }
-        if session_id:
-            item["sessionId"] = session_id
-        return item
 
-    def to_oxygen_saturation_item(self, user_id: str, device_id: str, session_id: Optional[str]) -> dict:
-        item = {
-            "userId": user_id,
+    def to_oxygen_saturation_item(self, user_id: str, device_id: str, session_id: str) -> dict:
+        return {
+            "sessionId": session_id,
             "eventId": self.eventId,
+            "userId": user_id,
             "deviceId": device_id,
             "measuredAt": self.measuredAt,
             "percentage": str(self.value),
         }
-        if session_id:
-            item["sessionId"] = session_id
-        return item
 
 
 @dataclass
 class BioEventRequest:
     userId: str
     deviceId: str
-    sessionId: Optional[str]
+    sessionId: str
     events: list[BioEvent]
 
     @classmethod
@@ -94,6 +84,6 @@ class BioEventRequest:
         return cls(
             userId=data["userId"],
             deviceId=data["deviceId"],
-            sessionId=data.get("sessionId"),
+            sessionId=data["sessionId"],
             events=[BioEvent.from_dict(e) for e in data.get("events", [])],
         )
