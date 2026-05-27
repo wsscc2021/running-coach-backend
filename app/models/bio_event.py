@@ -57,6 +57,30 @@ class BioEvent:
             item["sessionId"] = session_id
         return item
 
+    def to_speed_item(self, user_id: str, device_id: str, session_id: Optional[str]) -> dict:
+        item = {
+            "userId": user_id,
+            "eventId": self.eventId,
+            "deviceId": device_id,
+            "measuredAt": self.measuredAt,
+            "metersPerSecond": str(self.value),
+        }
+        if session_id:
+            item["sessionId"] = session_id
+        return item
+
+    def to_oxygen_saturation_item(self, user_id: str, device_id: str, session_id: Optional[str]) -> dict:
+        item = {
+            "userId": user_id,
+            "eventId": self.eventId,
+            "deviceId": device_id,
+            "measuredAt": self.measuredAt,
+            "percentage": str(self.value),
+        }
+        if session_id:
+            item["sessionId"] = session_id
+        return item
+
 
 @dataclass
 class BioEventRequest:
