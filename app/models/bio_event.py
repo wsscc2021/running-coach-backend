@@ -9,18 +9,14 @@ class BioEvent:
     measuredAt: str
     value: float
     unit: str
-    secondaryValue: Optional[float] = None  # blood_pressure: diastolic(mmHg)
-
     @classmethod
     def from_dict(cls, data: dict) -> "BioEvent":
-        raw_secondary = data.get("secondaryValue")
         return cls(
             eventId=data["eventId"],
             sensorType=data["sensorType"],
             measuredAt=data["measuredAt"],
             value=float(data["value"]),
             unit=data["unit"],
-            secondaryValue=float(raw_secondary) if raw_secondary is not None else None,
         )
 
     def to_dynamodb_item(self, user_id: str, device_id: str, session_id: Optional[str]) -> dict:
@@ -49,17 +45,14 @@ class BioEvent:
             item["sessionId"] = session_id
         return item
 
-    def to_blood_pressure_item(self, user_id: str, device_id: str, session_id: Optional[str]) -> dict:
+    def to_cadence_item(self, user_id: str, device_id: str, session_id: Optional[str]) -> dict:
         item = {
             "userId": user_id,
             "eventId": self.eventId,
             "deviceId": device_id,
             "measuredAt": self.measuredAt,
-            "systolic": str(self.value),
-            "diastolic": str(self.secondaryValue) if self.secondaryValue is not None else None,
+            "stepsPerMinute": str(self.value),
         }
-        if item["diastolic"] is None:
-            del item["diastolic"]
         if session_id:
             item["sessionId"] = session_id
         return item
