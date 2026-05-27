@@ -1,4 +1,5 @@
 from flask import Blueprint, request, jsonify
+from botocore.exceptions import ClientError
 from ..models.bio_event import BioEventRequest
 from ..services.bio_service import save_bio_events
 
@@ -17,5 +18,13 @@ def post_bio_events():
         return jsonify({"error": f"Missing fields: {', '.join(missing)}"}), 400
 
     bio_request = BioEventRequest.from_dict(body)
-    saved = save_bio_events(bio_request)
+    try:
+        saved = save_bio_events(bio_request)
+    except ClientError as e:
+        code = e.response["Error"]["Code"]
+        msg = e.response["Error"]["Message"]
+        return jsonify({"error": f"DynamoDB error [{code}]: {msg}"}), 503
+    except Exception as e:
+        return jsonify({"error": f"Unexpected error: {type(e).__name__}: {e}"}), 500
+
     return jsonify({"saved": saved}), 201
