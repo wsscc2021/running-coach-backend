@@ -72,6 +72,13 @@ aws dynamodb create-table \
   --key-schema AttributeName=userId,KeyType=HASH AttributeName=eventId,KeyType=RANGE \
   --billing-mode PAY_PER_REQUEST \
   --region ap-northeast-2
+
+aws dynamodb create-table \
+  --table-name collection_state \
+  --attribute-definitions AttributeName=configKey,AttributeType=S \
+  --key-schema AttributeName=configKey,KeyType=HASH \
+  --billing-mode PAY_PER_REQUEST \
+  --region ap-northeast-2
 ```
 
 

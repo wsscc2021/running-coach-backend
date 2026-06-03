@@ -10,6 +10,7 @@ class Config:
     SPEED_TABLE = os.getenv("SPEED_TABLE", "speed")
     OXYGEN_SATURATION_TABLE = os.getenv("OXYGEN_SATURATION_TABLE", "oxygen_saturation")
     SESSIONS_TABLE = os.getenv("SESSIONS_TABLE", "sessions")
+    COLLECTION_STATE_TABLE = os.getenv("COLLECTION_STATE_TABLE", "collection_state")
 
 
 class DevelopmentConfig(Config):
