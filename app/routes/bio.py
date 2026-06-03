@@ -2,12 +2,16 @@ from flask import Blueprint, request, jsonify
 from botocore.exceptions import ClientError
 from ..models.bio_event import BioEventRequest
 from ..services.bio_service import save_bio_events
+from ..services.collection_state import is_collecting
 
 bio_bp = Blueprint("bio", __name__)
 
 
 @bio_bp.post("/bio/events")
 def post_bio_events():
+    if not is_collecting():
+        return jsonify({"error": "Data collection is currently inactive"}), 423
+
     body = request.get_json(silent=True)
     if not body:
         return jsonify({"error": "Request body must be JSON"}), 400
