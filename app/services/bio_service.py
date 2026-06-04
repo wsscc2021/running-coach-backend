@@ -6,12 +6,14 @@ _HEART_RATE = "heart_rate"
 _CADENCE = "cadence"
 _SPEED = "speed"
 _OXYGEN_SATURATION = "oxygen_saturation"
+_FOOT_PRESSURE = "foot_pressure"
 
 _ROUTER = {
     _HEART_RATE:        ("HEART_RATE_TABLE",        "to_heart_rate_item"),
     _CADENCE:           ("CADENCE_TABLE",            "to_cadence_item"),
     _SPEED:             ("SPEED_TABLE",              "to_speed_item"),
     _OXYGEN_SATURATION: ("OXYGEN_SATURATION_TABLE",  "to_oxygen_saturation_item"),
+    _FOOT_PRESSURE:     ("FOOT_PRESSURE_TABLE",      "to_foot_pressure_item"),
 }
 
 

@@ -22,6 +22,16 @@ def post_bio_events():
         return jsonify({"error": f"Missing fields: {', '.join(missing)}"}), 400
 
     bio_request = BioEventRequest.from_dict(body)
+
+    for e in bio_request.events:
+        if e.sensorType == "foot_pressure":
+            if e.footSide not in ("left", "right"):
+                return jsonify({"error": f"foot_pressure event {e.eventId}: footSide must be 'left' or 'right'"}), 400
+            if len(e.values) != 6:
+                return jsonify({"error": f"foot_pressure event {e.eventId}: values must have exactly 6 elements"}), 400
+            if not all(0 <= v <= 4095 for v in e.values):
+                return jsonify({"error": f"foot_pressure event {e.eventId}: all sensor values must be in range 0-4095"}), 400
+
     try:
         saved = save_bio_events(bio_request)
     except ClientError as e:

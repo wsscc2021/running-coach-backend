@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 
 @dataclass
@@ -6,8 +6,10 @@ class BioEvent:
     eventId: str
     sensorType: str
     measuredAt: str
-    value: float
-    unit: str
+    value: float = 0.0
+    unit: str = ""
+    footSide: str = ""              # foot pressure: "left" | "right"
+    values: list[int] = field(default_factory=list)  # foot pressure: 6 sensors, 0-4095
 
     @classmethod
     def from_dict(cls, data: dict) -> "BioEvent":
@@ -15,8 +17,10 @@ class BioEvent:
             eventId=data["eventId"],
             sensorType=data["sensorType"],
             measuredAt=data["measuredAt"],
-            value=float(data["value"]),
-            unit=data["unit"],
+            value=float(data.get("value", 0.0)),
+            unit=data.get("unit", ""),
+            footSide=data.get("footSide", ""),
+            values=[int(v) for v in data.get("values", [])],
         )
 
     def to_dynamodb_item(self, user_id: str, device_id: str, session_id: str) -> dict:
@@ -69,6 +73,17 @@ class BioEvent:
             "deviceId": device_id,
             "measuredAt": self.measuredAt,
             "percentage": str(self.value),
+        }
+
+    def to_foot_pressure_item(self, user_id: str, device_id: str, session_id: str) -> dict:
+        return {
+            "sessionId": session_id,
+            "eventId": self.eventId,
+            "userId": user_id,
+            "deviceId": device_id,
+            "measuredAt": self.measuredAt,
+            "footSide": self.footSide,
+            "values": self.values,
         }
 
 
