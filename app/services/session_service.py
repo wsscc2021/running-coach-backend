@@ -32,6 +32,28 @@ def get_session_events(session_id: str) -> dict:
     speed      = query_sensor("SPEED_TABLE",      ["measuredAt", "metersPerSecond"])
     spo2       = query_sensor("OXYGEN_SATURATION_TABLE", ["measuredAt", "percentage"])
 
+    # ── 발 압력 집계 (핀별 평균, 0-4095) ──────────────────────────────
+    fp_table = get_table(current_app.config["FOOT_PRESSURE_TABLE"])
+    fp_items = fp_table.query(
+        KeyConditionExpression=Key("sessionId").eq(session_id)
+    ).get("Items", [])
+
+    fp_sums: dict[str, list] = {"left": [0] * 6, "right": [0] * 6}
+    fp_counts: dict[str, int] = {"left": 0, "right": 0}
+    for item in fp_items:
+        side = item.get("footSide")
+        vals = item.get("values", [])
+        if side in fp_sums and len(vals) == 6:
+            for i, v in enumerate(vals):
+                fp_sums[side][i] += int(v)
+            fp_counts[side] += 1
+
+    foot_pressure = {}
+    for side in ("left", "right"):
+        n = fp_counts[side]
+        if n:
+            foot_pressure[side] = [round(fp_sums[side][i] / n) for i in range(6)]
+
     return {
         "sessionId": session_id,
         "heartRate": [
@@ -46,4 +68,5 @@ def get_session_events(session_id: str) -> dict:
         "oxygenSaturation": [
             {"measuredAt": r["measuredAt"], "percentage": float(r["percentage"])} for r in spo2
         ],
+        "footPressure": foot_pressure,
     }

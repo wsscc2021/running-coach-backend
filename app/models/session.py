@@ -8,6 +8,7 @@ class Session:
     deviceId: str
     startTime: str
     endTime: str
+    sessionType: str = "running"   # "running" | "foot_pressure"
 
     @classmethod
     def from_dict(cls, data: dict) -> "Session":
@@ -17,6 +18,7 @@ class Session:
             deviceId=data["deviceId"],
             startTime=data["startTime"],
             endTime=data["endTime"],
+            sessionType=data.get("sessionType", "running"),
         )
 
     def to_dynamodb_item(self) -> dict:
@@ -26,4 +28,5 @@ class Session:
             "deviceId": self.deviceId,
             "startTime": self.startTime,
             "endTime": self.endTime,
+            "sessionType": self.sessionType,
         }
