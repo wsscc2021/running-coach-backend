@@ -14,7 +14,11 @@ _SYSTEM_PROMPT = """당신은 전문 러닝 코치입니다. 러너의 운동 �
 
 
 def generate_feedback(session_analysis: dict) -> str:
-    client = anthropic.Anthropic(api_key=current_app.config["ANTHROPIC_API_KEY"])
+    api_key = current_app.config.get("ANTHROPIC_API_KEY") or ""
+    if not api_key:
+        raise ValueError("ANTHROPIC_API_KEY가 설정되지 않았습니다. 백엔드 .env 파일을 확인하세요.")
+
+    client = anthropic.Anthropic(api_key=api_key)
 
     analysis_json = json.dumps(session_analysis, ensure_ascii=False, indent=2)
 
