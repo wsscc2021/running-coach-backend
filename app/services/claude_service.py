@@ -1,5 +1,6 @@
 import json
 import anthropic
+from anthropic import APIStatusError
 from flask import current_app
 
 _SYSTEM_PROMPT = """당신은 전문 러닝 코치입니다. 러너의 운동 세션 데이터를 분석하여 자연스럽고 격려적인 한국어 피드백을 제공합니다.
@@ -41,3 +42,24 @@ def generate_feedback(session_analysis: dict) -> str:
     )
 
     return response.content[0].text
+
+
+_API_ERROR_MESSAGES = {
+    "credit_balance_too_low":    "Anthropic 크레딧이 부족합니다. console.anthropic.com/settings/billing 에서 충전해 주세요.",
+    "authentication_error":      "ANTHROPIC_API_KEY가 유효하지 않습니다. 키를 확인해 주세요.",
+    "permission_error":          "API 키에 해당 모델 접근 권한이 없습니다.",
+    "rate_limit_error":          "API 요청 한도에 도달했습니다. 잠시 후 다시 시도해 주세요.",
+    "overloaded_error":          "Anthropic 서버가 일시적으로 과부하 상태입니다. 잠시 후 재시도해 주세요.",
+}
+
+
+def _friendly_api_error(exc: APIStatusError) -> str:
+    body = exc.response.json() if exc.response is not None else {}
+    error_type = body.get("error", {}).get("type", "")
+    msg = body.get("error", {}).get("message", "")
+
+    for key, friendly in _API_ERROR_MESSAGES.items():
+        if key in error_type or key in msg.lower().replace(" ", "_"):
+            return friendly
+
+    return f"Claude API 오류 (HTTP {exc.status_code}): {msg or error_type}"

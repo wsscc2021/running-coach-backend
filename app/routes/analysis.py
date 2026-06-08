@@ -1,8 +1,9 @@
 from flask import Blueprint, jsonify, request
 from botocore.exceptions import ClientError
+from anthropic import APIStatusError
 from ..services.session_service import get_session_events
 from ..services.analysis_service import analyze_heart_rate, analyze_foot_pressure, detect_risks
-from ..services.claude_service import generate_feedback
+from ..services.claude_service import generate_feedback, _friendly_api_error
 
 analysis_bp = Blueprint("analysis", __name__)
 
@@ -23,8 +24,10 @@ def _build_and_respond(hr_data: list, fp_data: dict, meta: dict) -> tuple:
     feedback_error = None
     try:
         feedback = generate_feedback(session_analysis)
+    except APIStatusError as e:
+        feedback_error = _friendly_api_error(e)
     except Exception as e:
-        feedback_error = f"{type(e).__name__}: {e}"
+        feedback_error = str(e)
 
     response = {**session_analysis, "feedback": feedback}
     if feedback_error:
