@@ -12,6 +12,7 @@ class Config:
     FOOT_PRESSURE_TABLE = os.getenv("FOOT_PRESSURE_TABLE", "foot_pressure")
     SESSIONS_TABLE = os.getenv("SESSIONS_TABLE", "sessions")
     COLLECTION_STATE_TABLE = os.getenv("COLLECTION_STATE_TABLE", "collection_state")
+    ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
 
 
 class DevelopmentConfig(Config):
